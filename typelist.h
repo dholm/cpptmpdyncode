@@ -2,7 +2,6 @@
 #define _TYPELIST_H_
 
 struct NullType {};
-struct NullTypelist {};
 
 template <class T, class U>
 struct Typelist {
@@ -51,17 +50,17 @@ template <class TList, class T>
 struct Append;
 
 template <>
-struct Append<NullTypelist, NullTypelist> {
-  typedef NullTypelist Type;
+struct Append<NullType, NullType> {
+  typedef NullType Type;
 };
 
 template <class T>
-struct Append<NullTypelist, T> {
-  typedef Typelist<T, NullTypelist> Type;
+struct Append<NullType, T> {
+  typedef Typelist<T, NullType> Type;
 };
 
 template <class Head, class Tail>
-struct Append<NullTypelist, Typelist<Head, Tail> > {
+struct Append<NullType, Typelist<Head, Tail> > {
   typedef Typelist<Head, Tail> Type;
 };
 
