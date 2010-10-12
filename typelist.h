@@ -69,4 +69,19 @@ struct Append<Typelist<Head, Tail>, T> {
   typedef Typelist<Head, typename Append<Tail, T>::Type> Type;
 };
 
+template <class TList1, class TList2>
+struct Splice;
+
+template <class TList1>
+struct Splice<TList1, NullType> {
+  typedef TList1 Type;
+};
+
+template <class TList1, class TList2>
+struct Splice {
+  typedef typename Splice<
+      typename Append<TList1, typename TList2::Head>::Type,
+      typename TList2::Tail>::Type Type;
+};
+
 #endif // _TYPELIST_H_
