@@ -58,17 +58,17 @@ template <Register32 reg, int base, int index, int scale, int displacement>
 struct ModRMSIB {
   typedef typename Splice<
 
-    typename Splice<
-      typename If<int8_t(displacement) == int32_t(displacement),
-        typename Imm<displacement, 1>::Type,
-        typename Imm<displacement, 4>::Type>::Type,
-      typename Imm<scale << 6 | index << 3 | base, 1>::Type>::Type,
-
     typename If<displacement == 0 && base != EBP,
       typename Imm<reg << 3 | 4, 1>::Type,
       typename If<int8_t(displacement) == int32_t(displacement),
         typename Imm<1 << 6 | reg << 3 | 4, 1>::Type,
-        typename Imm<2 << 6 | reg << 3 | 4, 1>::Type>::Type>::Type>::Type Type;
+        typename Imm<2 << 6 | reg << 3 | 4, 1>::Type>::Type>::Type,
+
+    typename Splice<
+      typename Imm<scale << 6 | index << 3 | base, 1>::Type,
+      typename If<int8_t(displacement) == int32_t(displacement),
+        typename Imm<displacement, 1>::Type,
+        typename Imm<displacement, 4>::Type>::Type>::Type>::Type Type;
 };
 
 typedef int (*call)(int i);
