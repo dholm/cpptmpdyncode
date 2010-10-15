@@ -21,4 +21,21 @@ struct Imm {
       typename Imm<value, bytes - 1>::Type>::Type Type;
 };
 
+template <class ByteList, size_t index>
+struct Serialize;
+
+template <size_t index>
+struct Serialize<NullType, index> {
+  static void Do(uint8_t* destination) { }
+};
+
+template <class ByteList, size_t index = 0>
+struct Serialize {
+  static void Do(uint8_t* destination) {
+    printf("Setting %02x\n", ByteList::Head::value);
+    destination[index] = ByteList::Head::value;
+    Serialize<typename ByteList::Tail, index + 1>::Do(destination);
+  }
+};
+
 #endif // _BYTES_H_
