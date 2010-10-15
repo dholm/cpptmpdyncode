@@ -3,6 +3,9 @@
 #include <string.h>
 #include <stdint.h>
 
+#include <sys/user.h>
+#include <sys/mman.h>
+
 #include "typelist.h"
 #include "bytes.h"
 
@@ -19,11 +22,16 @@ enum Register32 {
 
 template <Register32 reg>
 struct Inc {
-  enum { opcode = 0x40 + reg };
+  typedef typename Imm<0x40 + reg, 1>::Type Type;
+};
+
+template <class _MovRMSIB>
+struct MovRM32ToR32 {
+  typedef typename Splice<Imm<0x8b, 1>::Type, _MovRMSIB>::Type Type;
 };
 
 struct Ret {
-  enum { opcode = 0xc3 };
+  typedef Imm<0xc3, 1>::Type Type;
 };
 
 template <bool condition, class Then, class Else>
@@ -71,18 +79,31 @@ struct ModRMSIB {
         typename Imm<displacement, 4>::Type>::Type>::Type>::Type Type;
 };
 
-typedef int (*call)(int i);
-
-unsigned char inc_code[] = {
-  0x8b, 0x44, 0x24, 0x04, /* MOV EAX, [ESP+4] */
-  Inc<EAX>::opcode,
-  Ret::opcode
-};
+typedef int (*Call)(int i);
 
 int main(int argc, char** argv) {
-  call inc = reinterpret_cast<call>(malloc(sizeof(inc_code)));
-  memcpy(reinterpret_cast<void*>(inc), inc_code, sizeof(inc_code));
+  typedef Splice<
+      Splice<
+
+      MovRM32ToR32<ModRMSIB<EAX, ESP, 4, 0, 4>::Type>::Type,
+      Inc<EAX>::Type>::Type,
+
+      Ret::Type>::Type Fn;
+
+  void *mem = malloc(Length<Fn>::value + PAGE_SIZE);
+  Call inc = reinterpret_cast<Call>(
+      reinterpret_cast<off_t>(mem) + (PAGE_SIZE - 1) & PAGE_MASK);
+  if (mprotect(
+          reinterpret_cast<void*>(inc),
+          Length<Fn>::value,
+          PROT_READ | PROT_WRITE | PROT_EXEC) < 0) {
+    perror("Memory protection failed");
+    return -1;
+  }
+  Serialize<Fn>::Do(reinterpret_cast<uint8_t*>(inc));
 
   printf("%d = inc(41)\n", inc(41));
+  free(mem);
+
   return 0;
 }
