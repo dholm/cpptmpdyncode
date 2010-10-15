@@ -10,16 +10,7 @@
 #include "typelist.h"
 #include "bytes.h"
 
-enum Register32 {
-  EAX,
-  ECX,
-  EDX,
-  EBX,
-  ESP,
-  EBP,
-  ESI,
-  EDI
-};
+#include "registers.h"
 
 template <Register32 reg>
 struct Inc {
