@@ -6,6 +6,7 @@
 #include <sys/user.h>
 #include <sys/mman.h>
 
+#include "conditionals.h"
 #include "typelist.h"
 #include "bytes.h"
 
@@ -32,16 +33,6 @@ struct MovRM32ToR32 {
 
 struct Ret {
   typedef Imm<0xc3, 1>::Type Type;
-};
-
-template <bool condition, class Then, class Else>
-struct If {
-  typedef Then Type;
-};
-
-template <class Then, class Else>
-struct If<false, Then, Else> {
-  typedef Else Type;
 };
 
 /**
