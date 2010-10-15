@@ -32,7 +32,6 @@ struct Serialize<NullType, index> {
 template <class ByteList, size_t index = 0>
 struct Serialize {
   static void Do(uint8_t* destination) {
-    printf("Setting %02x\n", ByteList::Head::value);
     destination[index] = ByteList::Head::value;
     Serialize<typename ByteList::Tail, index + 1>::Do(destination);
   }
