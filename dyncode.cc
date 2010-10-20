@@ -13,7 +13,7 @@
 #include "registers.h"
 #include "modrm.h"
 
-template <Register32 reg>
+template <Register reg>
 struct Inc {
   typedef typename Imm<0x40 + reg, 1>::Type Type;
 };

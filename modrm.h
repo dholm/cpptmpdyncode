@@ -19,7 +19,7 @@
  *   Else
  *     Append uint8(2 << 6 | register << 3 | 4)
  */
-template <Register32 reg, int base, int index, int scale, int displacement>
+template <Register reg, int base, Register index, int scale, int displacement>
 struct ModRMSIB {
   typedef typename Splice<
 

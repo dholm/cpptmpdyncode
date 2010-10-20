@@ -1,7 +1,7 @@
 #ifndef _REGISTERS_H_
 #define _REGISTERS_H_
 
-enum Register32 {
+enum Register {
   EAX,
   ECX,
   EDX,
