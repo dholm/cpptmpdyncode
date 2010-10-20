@@ -5,12 +5,6 @@
  * Inputs:  Register, Base, Index, Scale, Displacement
  * Outputs: Typelist ModRM
  *
- * If displacement isn't 0 or base is EBP, then
- *   If displacement is signed byte, then
- *     Append int8(displacement)
- *   Else
- *     Append int32(displacement)
- * Append uint8(scale << 6 | index << 3 | base)
  * If displacement is 0 and base is not EBP, then
  *   Append uint8(register << 3 | 4)
  * Else
@@ -18,6 +12,12 @@
  *     Append uint8(1 << 6 | register << 3 | 4)
  *   Else
  *     Append uint8(2 << 6 | register << 3 | 4)
+ * Append uint8(scale << 6 | index << 3 | base)
+ * If displacement isn't 0 or base is EBP, then
+ *   If displacement is signed byte, then
+ *     Append int8(displacement)
+ *   Else
+ *     Append int32(displacement)
  */
 template <Register reg, int base, Register index, int scale, int displacement>
 struct ModRMSIB {
