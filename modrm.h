@@ -1,6 +1,14 @@
 #ifndef _MODRM_H_
 #define _MODRM_H_
 
+template <int32_t constant, size_t bytes>
+struct WillFit;
+
+template <int32_t constant>
+struct WillFit<constant, 1> {
+  enum { value = int32_t(constant) == int8_t(constant) };
+};
+
 /**
  * Inputs:  Register, Base, Index, Scale, Displacement
  * Outputs: Typelist ModRM
@@ -25,13 +33,13 @@ struct ModRMSIB {
 
     typename If<displacement == 0 && base != EBP,
       typename Imm<reg << 3 | 4, 1>::Type,
-      typename If<int8_t(displacement) == int32_t(displacement),
+      typename If<WillFit<displacement, 1>::value,
         typename Imm<1 << 6 | reg << 3 | 4, 1>::Type,
         typename Imm<2 << 6 | reg << 3 | 4, 1>::Type>::Type>::Type,
 
     typename Splice<
       typename Imm<scale << 6 | index << 3 | base, 1>::Type,
-      typename If<int8_t(displacement) == int32_t(displacement),
+      typename If<WillFit<displacement, 1>::value,
         typename Imm<displacement, 1>::Type,
         typename Imm<displacement, 4>::Type>::Type>::Type>::Type Type;
 };
