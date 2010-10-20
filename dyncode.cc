@@ -68,12 +68,24 @@ class AlignedPointer {
   void* m_aligned_pointer;
 };
 
-int main(int argc, char** argv) {
-  typedef Splice<
-      Splice<
+template <typename ...Statements>
+struct CodeBlock;
 
+template <typename Statement, typename... Tail>
+struct CodeBlock<Statement, Tail...> {
+  typedef typename Splice<
+    Statement, typename CodeBlock<Tail...>::Type >::Type Type;
+};
+
+template <>
+struct CodeBlock<> {
+  typedef NullType Type;
+};
+
+int main(int argc, char** argv) {
+  typedef CodeBlock<
       MovRM32ToR32<ModRMSIB<EAX, ESP, ESP, 0, 4>::Type>::Type,
-      Inc<EAX>::Type>::Type,
+      Inc<EAX>::Type,
       Ret::Type>::Type Fn;
 
   AlignedPointer inc_mem;
