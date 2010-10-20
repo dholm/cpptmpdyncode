@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 
 #include <sys/user.h>
 #include <sys/mman.h>
@@ -29,20 +30,60 @@ struct Ret {
 
 typedef int (*Call)(int i);
 
+class AlignedPointer {
+ public:
+  AlignedPointer() :
+      m_pointer(NULL),
+      m_aligned_pointer(NULL) {
+  }
+
+  ~AlignedPointer() {
+    m_aligned_pointer = NULL;
+    free(m_pointer);
+  }
+
+  int init(size_t size, off_t alignment) {
+    m_pointer = malloc(size + (alignment - 1));
+    if (!m_pointer) {
+      return -ENOMEM;
+    }
+
+    m_aligned_pointer = reinterpret_cast<void*>(
+        (reinterpret_cast<off_t>(m_pointer) + (alignment - 1)) &
+        ~(alignment - 1));
+
+    return 0;
+  }
+
+  void* operator()() {
+    return m_aligned_pointer;
+  }
+
+  const void* operator()() const {
+    return m_aligned_pointer;
+  }
+
+ private:
+  void* m_pointer;
+  void* m_aligned_pointer;
+};
+
 int main(int argc, char** argv) {
   typedef Splice<
       Splice<
 
-      MovRM32ToR32<ModRMSIB<EAX, ESP, 4, 0, 4>::Type>::Type,
+      MovRM32ToR32<ModRMSIB<EAX, ESP, ESP, 0, 4>::Type>::Type,
       Inc<EAX>::Type>::Type,
-
       Ret::Type>::Type Fn;
 
-  void *mem = malloc(Length<Fn>::value + PAGE_SIZE);
-  Call inc = reinterpret_cast<Call>(
-      reinterpret_cast<off_t>(mem) + (PAGE_SIZE - 1) & PAGE_MASK);
+  AlignedPointer inc_mem;
+  if (inc_mem.init(Length<Fn>::value, PAGE_SIZE) < 0) {
+    fprintf(stderr, "Unable to allocate memory!\n");
+    return -1;
+  }
+  Call inc = reinterpret_cast<Call>(inc_mem());
   if (mprotect(
-          reinterpret_cast<void*>(inc),
+          inc_mem(),
           Length<Fn>::value,
           PROT_READ | PROT_WRITE | PROT_EXEC) < 0) {
     perror("Memory protection failed");
@@ -51,7 +92,6 @@ int main(int argc, char** argv) {
   Serialize<Fn>::Do(reinterpret_cast<uint8_t*>(inc));
 
   printf("%d = inc(41)\n", inc(41));
-  free(mem);
 
   return 0;
 }
