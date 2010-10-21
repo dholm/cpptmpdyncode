@@ -84,7 +84,7 @@ struct CodeBlock<> {
 
 int main(int argc, char** argv) {
   typedef CodeBlock<
-      MovRM32ToR32<ModRMSIB<EAX, ESP, ESP, 0, 4>::Type>::Type,
+      MovRM32ToR32<ModRMSIB<EAX, ESP, ESP, SibScale_1, 4>::Type>::Type,
       Inc<EAX>::Type,
       Ret::Type>::Type Fn;
 

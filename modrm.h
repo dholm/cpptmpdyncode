@@ -9,6 +9,13 @@ struct WillFit<constant, 1> {
   enum { value = int32_t(constant) == int8_t(constant) };
 };
 
+enum SibScale {
+  SibScale_1 = 1,
+  SibScale_2 = 2,
+  SibScale_4 = 4,
+  SibScale_8 = 8
+};
+
 /**
  * Inputs:  Register, Base, Index, Scale, Displacement
  * Outputs: Typelist ModRM
@@ -27,7 +34,7 @@ struct WillFit<constant, 1> {
  *   Else
  *     Append int32(displacement)
  */
-template <Register reg, int base, Register index, int scale, int displacement>
+template <Register reg, int base, Register index, SibScale scale, int displacement>
 struct ModRMSIB {
   typedef typename Splice<
 
@@ -38,7 +45,9 @@ struct ModRMSIB {
         typename Imm<2 << 6 | reg << 3 | 4, 1>::Type>::Type>::Type,
 
     typename Splice<
-      typename Imm<scale << 6 | index << 3 | base, 1>::Type,
+      typename If<index == ESP,
+        typename Imm<index << 3 | base, 1>::Type,
+        typename Imm<scale << 6 | index << 3 | base, 1>::Type>::Type,
       typename If<WillFit<displacement, 1>::value,
         typename Imm<displacement, 1>::Type,
         typename Imm<displacement, 4>::Type>::Type>::Type>::Type Type;
